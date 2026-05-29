@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OBD Express</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- ── Header ──────────────────────────────────────────── -->
+    <header class="header">
+      <div class="header-brand">
+        <span class="brand-icon">&#9650;</span>
+        <h1 class="brand-title">OBD <span class="accent">Express</span></h1>
+        <span id="status-badge" class="status-badge disconnected">&#9679; DISCONNECTED</span>
+      </div>
+      <div class="header-controls">
+        <select id="port-select" class="select">
+          <option value="">&#8212; Port &#8212;</option>
+        </select>
+        <select id="baud-select" class="select">
+          <option value="38400">38400</option>
+          <option value="9600">9600</option>
+          <option value="115200">115200</option>
+        </select>
+        <button id="scan-btn"       class="btn btn-ghost">Scan</button>
+        <button id="connect-btn"    class="btn btn-primary">Connect</button>
+        <button id="disconnect-btn" class="btn btn-danger" disabled>Disconnect</button>
+      </div>
+    </header>
+
+    <!-- ── Main cluster ────────────────────────────────────── -->
+    <main class="dashboard">
+
+      <!-- ── Diagnostics row: monitors + true odometer ───────── -->
+      <div class="diag-row">
+
+        <!-- Readiness monitors -->
+        <section class="diag-card" id="monitors-panel">
+          <div class="diag-header">
+            <div class="diag-title-group">
+              <span class="diag-icon" id="mon-icon">&#9675;</span>
+              <span class="diag-title">READINESS MONITORS</span>
+              <span class="diag-badge" id="mon-badge" hidden></span>
+            </div>
+            <button id="read-monitors-btn" class="btn btn-ghost btn-sm" disabled>&#8635; Check</button>
+          </div>
+          <div class="diag-body" id="monitors-body">
+            <span class="diag-placeholder">Connect to check readiness monitors</span>
+          </div>
+        </section>
+
+        <!-- True odometer -->
+        <section class="diag-card" id="odometer-card">
+          <div class="diag-header">
+            <div class="diag-title-group">
+              <span class="diag-title">TRUE ODOMETER</span>
+            </div>
+            <button id="read-odometer-btn" class="btn btn-ghost btn-sm" disabled>&#8635; Read</button>
+          </div>
+          <div class="diag-body" id="odometer-body">
+            <span class="diag-placeholder">Connect to read odometer</span>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ── Fault codes panel ─────────────────────────────── -->
+      <section class="dtc-panel" id="dtc-panel">
+        <div class="dtc-header">
+          <div class="dtc-title-group">
+            <span class="dtc-icon" id="dtc-icon">&#9675;</span>
+            <span class="dtc-title">FAULT CODES</span>
+            <span class="dtc-count" id="dtc-count" hidden></span>
+          </div>
+          <div class="dtc-actions">
+            <button id="read-dtc-btn"  class="btn btn-ghost  btn-sm" disabled>&#128269; Read Codes</button>
+            <button id="clear-dtc-btn" class="btn btn-warn   btn-sm" disabled>&#128465; Clear Codes</button>
+          </div>
+        </div>
+        <div class="dtc-body" id="dtc-body">
+          <span class="dtc-placeholder">Connect to an OBD adapter to read fault codes</span>
+        </div>
+      </section>
+
+      <section class="cluster">
+
+        <!-- RPM gauge -->
+        <div class="gauge-card">
+          <svg id="gauge-RPM" viewBox="0 0 260 250" width="260" height="250" aria-label="RPM"></svg>
+        </div>
+
+        <!-- Centre panel: session odometer -->
+        <div class="odo-panel">
+          <p class="odo-eyebrow">TRIP DISTANCE</p>
+
+          <div class="odometer">
+            <div class="odo-tape">
+              <span class="odo-digit" id="odo-0">0</span>
+              <span class="odo-digit" id="odo-1">0</span>
+              <span class="odo-digit" id="odo-2">0</span>
+              <span class="odo-digit" id="odo-3">0</span>
+              <span class="odo-sep">.</span>
+              <span class="odo-digit odo-frac" id="odo-4">0</span>
+            </div>
+            <span class="odo-unit">km</span>
+          </div>
+
+          <p class="odo-note">since last reset</p>
+          <button id="reset-session-btn" class="btn btn-ghost btn-sm">&#8635; Reset</button>
+        </div>
+
+        <!-- Speed gauge -->
+        <div class="gauge-card">
+          <svg id="gauge-SPEED" viewBox="0 0 260 250" width="260" height="250" aria-label="Speed"></svg>
+        </div>
+
+      </section>
+
+      <!-- ── Metric cards ──────────────────────────────────── -->
+      <section class="metrics-row">
+
+        <div class="metric-card" style="--mc:#ff6b35">
+          <div class="mc-row">
+            <span class="mc-label">COOLANT</span>
+            <span class="mc-val"><b id="val-COOLANT_TEMP">&#8212;</b> <small>&#176;C</small></span>
+          </div>
+          <div class="mc-track"><div id="bar-COOLANT_TEMP" class="mc-fill"></div></div>
+        </div>
+
+        <div class="metric-card" style="--mc:#7bed9f">
+          <div class="mc-row">
+            <span class="mc-label">ENGINE LOAD</span>
+            <span class="mc-val"><b id="val-ENGINE_LOAD">&#8212;</b> <small>%</small></span>
+          </div>
+          <div class="mc-track"><div id="bar-ENGINE_LOAD" class="mc-fill"></div></div>
+        </div>
+
+        <div class="metric-card" style="--mc:#ffd32a">
+          <div class="mc-row">
+            <span class="mc-label">THROTTLE</span>
+            <span class="mc-val"><b id="val-THROTTLE">&#8212;</b> <small>%</small></span>
+          </div>
+          <div class="mc-track"><div id="bar-THROTTLE" class="mc-fill"></div></div>
+        </div>
+
+        <div class="metric-card" style="--mc:#00d2d3">
+          <div class="mc-row">
+            <span class="mc-label">FUEL LEVEL</span>
+            <span class="mc-val"><b id="val-FUEL_LEVEL">&#8212;</b> <small>%</small></span>
+          </div>
+          <div class="mc-track"><div id="bar-FUEL_LEVEL" class="mc-fill"></div></div>
+        </div>
+
+      </section>
+
+      <p id="error-msg" class="error-msg" hidden></p>
+
+    </main>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

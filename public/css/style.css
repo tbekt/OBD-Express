@@ -1,0 +1,761 @@
+/* ── Reset ───────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Tokens ──────────────────────────────────────────────────── */
+:root {
+  --bg:       #07070f;
+  --surface:  #0e0e1c;
+  --surface2: #161624;
+  --border:   #22223a;
+  --text:     #d8d8ec;
+  --muted:    #4a4a6a;
+  --accent:   #0099ff;
+}
+
+/* ── Base ────────────────────────────────────────────────────── */
+body {
+  background-color: var(--bg);
+  /* Subtle dot grid */
+  background-image: radial-gradient(circle, #13132a 1px, transparent 1px);
+  background-size: 26px 26px;
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+  min-height: 100vh;
+}
+
+/* Top glow */
+body::before {
+  content: '';
+  position: fixed;
+  top: -160px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+  height: 360px;
+  background: radial-gradient(ellipse, rgba(0, 120, 255, 0.07) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 20px 24px 48px;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 20px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+  /* Gradient glow on separator */
+  border-image: linear-gradient(90deg, transparent, var(--accent) 40%, transparent) 1;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  font-size: 18px;
+  color: var(--accent);
+  filter: drop-shadow(0 0 6px var(--accent));
+}
+
+.brand-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.accent { color: var(--accent); }
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-family: 'Courier New', monospace;
+  white-space: nowrap;
+  transition: all 0.4s ease;
+}
+
+.status-badge.connected {
+  color: #00ff99;
+  background: rgba(0, 255, 153, 0.08);
+  border: 1px solid rgba(0, 255, 153, 0.25);
+  box-shadow: 0 0 12px rgba(0, 255, 153, 0.15);
+  animation: pulse-green 2s infinite;
+}
+
+.status-badge.disconnected {
+  color: #ff5555;
+  background: rgba(255, 80, 80, 0.08);
+  border: 1px solid rgba(255, 80, 80, 0.2);
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 153, 0.15); }
+  50%       { box-shadow: 0 0 18px rgba(0, 255, 153, 0.3); }
+}
+
+.header-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 11px;
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.select:focus { border-color: var(--accent); }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn {
+  padding: 7px 16px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn:not(:disabled):hover { opacity: 0.88; }
+.btn:not(:disabled):active { transform: scale(0.95); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 0 14px rgba(0, 153, 255, 0.35);
+}
+
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-danger { background: #cc3333; color: #fff; }
+
+.btn-sm { font-size: 11px; padding: 5px 12px; }
+
+/* ── Cluster (3-column: gauge | odometer | gauge) ────────────── */
+.cluster {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.gauge-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+  transition: box-shadow 0.3s;
+}
+
+.gauge-card:hover {
+  box-shadow: 0 6px 40px rgba(0, 0, 0, 0.7);
+}
+
+/* ── Odometer panel ──────────────────────────────────────────── */
+.odo-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  min-height: 286px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.odo-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.odometer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.odo-tape {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #030309;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #1a1a30;
+  box-shadow:
+    inset 0 3px 14px rgba(0, 0, 0, 0.95),
+    0 0 24px rgba(0, 153, 255, 0.04);
+}
+
+.odo-digit {
+  font-family: 'Courier New', monospace;
+  font-size: 38px;
+  font-weight: 900;
+  color: #d4d4f0;
+  min-width: 26px;
+  text-align: center;
+  background: #0b0b1a;
+  padding: 3px 5px;
+  border-radius: 5px;
+  border: 1px solid #1c1c30;
+  text-shadow: 0 0 8px rgba(180, 180, 255, 0.25);
+  transition: color 0.12s;
+  transform-origin: center center;
+}
+
+.odo-frac {
+  color: #00d2d3;
+  background: #061616;
+  text-shadow: 0 0 10px rgba(0, 210, 211, 0.4);
+}
+
+.odo-sep {
+  font-size: 32px;
+  font-weight: 900;
+  color: #2a2a48;
+  padding: 0 1px;
+  align-self: flex-end;
+  padding-bottom: 6px;
+  user-select: none;
+}
+
+.odo-unit {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.odo-note {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* ── Metric cards ────────────────────────────────────────────── */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--mc, #555);
+  border-radius: 12px;
+  padding: 16px 18px 14px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 0.3s, transform 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+.mc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.mc-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: var(--mc, var(--muted));
+  text-transform: uppercase;
+}
+
+.mc-val {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.mc-val b {
+  font-family: 'Courier New', monospace;
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.mc-val small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.mc-track {
+  height: 3px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.mc-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--mc, #555);
+  border-radius: 2px;
+  box-shadow: 0 0 6px var(--mc, #555);
+  transition: width 0.35s ease;
+}
+
+/* ── Diagnostics row (monitors + true odometer) ─────────────── */
+.diag-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.diag-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 20px 18px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Odometer card: fixed width so it doesn't shrink */
+#odometer-card { min-width: 220px; }
+
+.diag-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+
+.diag-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.diag-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.diag-icon {
+  font-size: 14px;
+  color: var(--muted);
+  transition: color 0.3s, filter 0.3s;
+  line-height: 1;
+}
+
+.diag-icon.warn {
+  color: #ffc828;
+  animation: dtc-warn 1.8s ease-in-out infinite;
+}
+
+.diag-icon.ok { color: #00ff99; filter: drop-shadow(0 0 4px #00ff9966); }
+
+.diag-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+.diag-badge.incomplete {
+  background: rgba(255, 200, 40, 0.12);
+  color: #ffc828;
+  border: 1px solid rgba(255, 200, 40, 0.25);
+}
+
+.diag-badge.all-complete {
+  background: rgba(0, 255, 153, 0.08);
+  color: #00ff99;
+  border: 1px solid rgba(0, 255, 153, 0.2);
+}
+
+.diag-body { min-height: 36px; }
+
+.diag-placeholder {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Monitor chips grid */
+.monitors-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.monitor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.monitor-chip.complete {
+  background: rgba(0, 255, 153, 0.07);
+  border: 1px solid rgba(0, 255, 153, 0.15);
+  color: #00cc80;
+}
+
+.monitor-chip.incomplete {
+  background: rgba(255, 200, 40, 0.1);
+  border: 1px solid rgba(255, 200, 40, 0.22);
+  color: #ffc828;
+}
+
+.mon-sym { font-size: 11px; font-weight: 800; }
+
+.mon-summary {
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+}
+
+.mon-summary.warn { color: #ffc828; }
+.mon-summary.ok   { color: #00cc80; }
+
+/* True odometer display */
+.true-odo-wrap {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.true-odo-value {
+  font-family: 'Courier New', monospace;
+  font-size: 40px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 3px;
+  line-height: 1;
+  text-shadow: 0 0 22px rgba(0, 153, 255, 0.28);
+}
+
+.true-odo-unit {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 7px;
+}
+
+.true-odo-note {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 5px;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+.true-odo-unsupported {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+}
+
+.true-odo-unsupported p {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.true-odo-unsupported small {
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+/* ── DTC panel ───────────────────────────────────────────────── */
+.dtc-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 20px 18px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.4s;
+}
+
+.dtc-panel.has-codes {
+  border-color: rgba(255, 200, 40, 0.35);
+  box-shadow: 0 2px 20px rgba(255, 200, 40, 0.06);
+}
+
+.dtc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dtc-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dtc-icon {
+  font-size: 15px;
+  color: var(--muted);
+  transition: color 0.3s, filter 0.3s;
+  line-height: 1;
+}
+
+.dtc-icon.warn {
+  color: #ffc828;
+  filter: drop-shadow(0 0 5px #ffc82888);
+  animation: dtc-warn 1.8s ease-in-out infinite;
+}
+
+.dtc-icon.ok {
+  color: #00ff99;
+  filter: drop-shadow(0 0 4px #00ff9966);
+}
+
+@keyframes dtc-warn {
+  0%, 100% { filter: drop-shadow(0 0 4px #ffc82866); }
+  50%       { filter: drop-shadow(0 0 12px #ffc828cc); }
+}
+
+.dtc-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.dtc-count {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: rgba(255, 200, 40, 0.12);
+  color: #ffc828;
+  border: 1px solid rgba(255, 200, 40, 0.25);
+  letter-spacing: 0.5px;
+}
+
+.dtc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn-warn {
+  background: rgba(255, 80, 80, 0.1);
+  color: #ff8888;
+  border: 1px solid rgba(255, 80, 80, 0.22);
+}
+
+.btn-warn:not(:disabled):hover {
+  background: rgba(255, 80, 80, 0.18);
+}
+
+/* Two-step confirm state */
+.btn-warn.confirm-active {
+  background: rgba(255, 80, 80, 0.25);
+  color: #ff5555;
+  border-color: rgba(255, 80, 80, 0.5);
+  box-shadow: 0 0 12px rgba(255, 80, 80, 0.2);
+  animation: confirm-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes confirm-pulse {
+  from { box-shadow: 0 0 6px rgba(255, 80, 80, 0.15); }
+  to   { box-shadow: 0 0 16px rgba(255, 80, 80, 0.35); }
+}
+
+/* DTC chip body */
+.dtc-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-height: 32px;
+}
+
+.dtc-placeholder {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.dtc-ok-msg {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #00ff99;
+}
+
+.dtc-ok-msg::before {
+  content: '✓';
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Code chips — colour by category */
+.dtc-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 13px;
+  border-radius: 7px;
+  letter-spacing: 1.5px;
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.dtc-chip:hover { transform: scale(1.04); }
+
+/* P — Powertrain */
+.dtc-chip-p {
+  background: rgba(255, 80, 80, 0.1);
+  color: #ff8888;
+  border: 1px solid rgba(255, 80, 80, 0.25);
+}
+
+/* C — Chassis */
+.dtc-chip-c {
+  background: rgba(0, 170, 255, 0.1);
+  color: #55ccff;
+  border: 1px solid rgba(0, 170, 255, 0.25);
+}
+
+/* B — Body */
+.dtc-chip-b {
+  background: rgba(255, 200, 40, 0.1);
+  color: #ffc828;
+  border: 1px solid rgba(255, 200, 40, 0.25);
+}
+
+/* U — Network */
+.dtc-chip-u {
+  background: rgba(123, 237, 159, 0.1);
+  color: #7bed9f;
+  border: 1px solid rgba(123, 237, 159, 0.25);
+}
+
+/* ── Error banner ────────────────────────────────────────────── */
+.error-msg {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: rgba(200, 50, 50, 0.1);
+  border: 1px solid rgba(200, 50, 50, 0.25);
+  border-radius: 8px;
+  color: #ff8888;
+  font-size: 12px;
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes chip-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.88); }
+  to   { opacity: 1; transform: translateY(0)  scale(1); }
+}
+
+@keyframes odo-digit-flip {
+  0%   { opacity: 1; transform: scaleY(1); }
+  42%  { opacity: 0; transform: scaleY(0.15); }
+  58%  { opacity: 0; transform: scaleY(0.15); }
+  100% { opacity: 1; transform: scaleY(1); }
+}
+
+/* Page section entrance stagger */
+.header      { animation: fade-up 0.5s ease both; animation-delay: 0.00s; }
+.diag-row    { animation: fade-up 0.5s ease both; animation-delay: 0.08s; }
+.dtc-panel   { animation: fade-up 0.5s ease both; animation-delay: 0.14s; }
+.cluster     { animation: fade-up 0.5s ease both; animation-delay: 0.20s; }
+.metrics-row { animation: fade-up 0.5s ease both; animation-delay: 0.26s; }
+
+/* Odometer digit flip */
+.odo-digit.flip { animation: odo-digit-flip 0.18s ease-in-out; }
+
+/* DTC & monitor chip entrance (delay supplied inline per chip) */
+.dtc-chip     { animation: chip-enter 0.28s ease both; }
+.monitor-chip { animation: chip-enter 0.28s ease both; }
+
+/* True odometer card reveal */
+.true-odo-wrap { animation: fade-up 0.4s ease both; }
+
+/* Error banner slide-in */
+.error-msg:not([hidden]) { animation: fade-up 0.3s ease both; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .cluster {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .odo-panel  { min-height: auto; width: 100%; max-width: 340px; }
+  .diag-row   { grid-template-columns: 1fr; }
+  #odometer-card { min-width: unset; }
+}
+
+@media (max-width: 600px) {
+  .metrics-row { grid-template-columns: repeat(2, 1fr); }
+}
