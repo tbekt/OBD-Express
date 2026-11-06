@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,30 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+<%
+  // Metric cards rendered below the cluster. Declared here so the markup stays
+  // a single loop instead of nine near-identical blocks.
+  const metrics = [
+    { key: 'COOLANT_TEMP',   label: 'Koelvloeistof', unit: '&deg;C',    color: '#ff6b35' },
+    { key: 'ENGINE_LOAD',    label: 'Motorbelasting', unit: '%',        color: '#7bed9f' },
+    { key: 'THROTTLE',       label: 'Gaspedaal',      unit: '%',        color: '#ffd32a' },
+    { key: 'FUEL_LEVEL',     label: 'Tankniveau',     unit: '%',        color: '#00d2d3' },
+    { key: 'INTAKE_TEMP',    label: 'Inlaatlucht',    unit: '&deg;C',   color: '#54a0ff' },
+    { key: 'MAF',            label: 'Luchtmassa',     unit: 'g/s',      color: '#a29bfe' },
+    { key: 'TIMING_ADVANCE', label: 'Ontstekingstip', unit: '&deg;',    color: '#fd79a8' },
+    { key: 'BATTERY',        label: 'Accuspanning',   unit: 'V',        color: '#badc58' },
+  ];
+
+  const stats = [
+    { key: 'maxRpm',      label: 'Max toerental', unit: 'rpm' },
+    { key: 'maxSpeed',    label: 'Max snelheid',  unit: 'km/h' },
+    { key: 'avgSpeed',    label: 'Gem. snelheid', unit: 'km/h' },
+    { key: 'durationSec', label: 'Rijduur',       unit: '' },
+    { key: 'idleSec',     label: 'Stationair',    unit: '' },
+    { key: 'fuelUsedL',   label: 'Verbruikt',     unit: 'L' },
+    { key: 'avgL100',     label: 'Gem. verbruik', unit: 'L/100km' },
+  ];
+%>
 
   <div class="app">
 
@@ -15,87 +39,83 @@
       <div class="header-brand">
         <span class="brand-icon">&#9650;</span>
         <h1 class="brand-title">OBD <span class="accent">Express</span></h1>
-        <span id="status-badge" class="status-badge disconnected">&#9679; DISCONNECTED</span>
+        <span id="status-badge" class="status-badge disconnected">&#9679; OFFLINE</span>
       </div>
       <div class="header-controls">
-        <select id="port-select" class="select">
-          <option value="">&#8212; Port &#8212;</option>
+        <select id="port-select" class="select" aria-label="Seriële poort">
+          <option value="">&#8212; Poort &#8212;</option>
         </select>
-        <select id="baud-select" class="select">
+        <select id="baud-select" class="select" aria-label="Baud rate">
+          <option value="auto" selected>Auto baud</option>
           <option value="38400">38400</option>
           <option value="9600">9600</option>
           <option value="115200">115200</option>
+          <option value="500000">500000</option>
         </select>
         <button id="scan-btn"       class="btn btn-ghost">Scan</button>
-        <button id="connect-btn"    class="btn btn-primary">Connect</button>
-        <button id="disconnect-btn" class="btn btn-danger" disabled>Disconnect</button>
+        <button id="demo-btn"       class="btn btn-ghost" title="Bekijk het dashboard zonder auto">Demo</button>
+        <button id="connect-btn"    class="btn btn-primary">Verbind</button>
+        <button id="disconnect-btn" class="btn btn-danger" disabled>Verbreek</button>
       </div>
     </header>
 
-    <!-- ── Main cluster ────────────────────────────────────── -->
     <main class="dashboard">
 
-      <!-- ── Diagnostics row: monitors + true odometer ───────── -->
-      <div class="diag-row">
-
-        <!-- Readiness monitors -->
-        <section class="diag-card" id="monitors-panel">
-          <div class="diag-header">
-            <div class="diag-title-group">
-              <span class="diag-icon" id="mon-icon">&#9675;</span>
-              <span class="diag-title">READINESS MONITORS</span>
-              <span class="diag-badge" id="mon-badge" hidden></span>
-            </div>
-            <button id="read-monitors-btn" class="btn btn-ghost btn-sm" disabled>&#8635; Check</button>
+      <!-- ── Fault codes ────────────────────────────────────── -->
+      <section class="panel dtc-panel" id="dtc-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="panel-icon" id="dtc-icon">&#9675;</span>
+            <h2 class="panel-title">Foutcodes</h2>
+            <span class="badge" id="dtc-count" hidden></span>
           </div>
-          <div class="diag-body" id="monitors-body">
-            <span class="diag-placeholder">Connect to check readiness monitors</span>
-          </div>
-        </section>
-
-        <!-- True odometer -->
-        <section class="diag-card" id="odometer-card">
-          <div class="diag-header">
-            <div class="diag-title-group">
-              <span class="diag-title">TRUE ODOMETER</span>
-            </div>
-            <button id="read-odometer-btn" class="btn btn-ghost btn-sm" disabled>&#8635; Read</button>
-          </div>
-          <div class="diag-body" id="odometer-body">
-            <span class="diag-placeholder">Connect to read odometer</span>
-          </div>
-        </section>
-
-      </div>
-
-      <!-- ── Fault codes panel ─────────────────────────────── -->
-      <section class="dtc-panel" id="dtc-panel">
-        <div class="dtc-header">
-          <div class="dtc-title-group">
-            <span class="dtc-icon" id="dtc-icon">&#9675;</span>
-            <span class="dtc-title">FAULT CODES</span>
-            <span class="dtc-count" id="dtc-count" hidden></span>
-          </div>
-          <div class="dtc-actions">
-            <button id="read-dtc-btn"  class="btn btn-ghost  btn-sm" disabled>&#128269; Read Codes</button>
-            <button id="clear-dtc-btn" class="btn btn-warn   btn-sm" disabled>&#128465; Clear Codes</button>
+          <div class="panel-actions">
+            <button id="read-dtc-btn"  class="btn btn-ghost btn-sm" disabled>Uitlezen</button>
+            <button id="clear-dtc-btn" class="btn btn-warn  btn-sm" disabled>Wissen</button>
           </div>
         </div>
-        <div class="dtc-body" id="dtc-body">
-          <span class="dtc-placeholder">Connect to an OBD adapter to read fault codes</span>
+        <div class="panel-body" id="dtc-body">
+          <span class="placeholder">Verbind met een adapter om foutcodes te lezen</span>
         </div>
       </section>
 
-      <section class="cluster">
+      <!-- ── Diagnostics row ────────────────────────────────── -->
+      <div class="diag-row">
+        <section class="panel" id="monitors-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-icon" id="mon-icon">&#9675;</span>
+              <h2 class="panel-title">Readiness monitors</h2>
+              <span class="badge" id="mon-badge" hidden></span>
+            </div>
+            <button id="read-monitors-btn" class="btn btn-ghost btn-sm" disabled>Controleer</button>
+          </div>
+          <div class="panel-body" id="monitors-body">
+            <span class="placeholder">Verbind om monitors te controleren</span>
+          </div>
+        </section>
 
-        <!-- RPM gauge -->
+        <section class="panel" id="odometer-card">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <h2 class="panel-title">Werkelijke km-stand</h2>
+            </div>
+            <button id="read-odometer-btn" class="btn btn-ghost btn-sm" disabled>Lees</button>
+          </div>
+          <div class="panel-body" id="odometer-body">
+            <span class="placeholder">Verbind om uit te lezen</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── Gauge cluster ──────────────────────────────────── -->
+      <section class="cluster">
         <div class="gauge-card">
-          <svg id="gauge-RPM" viewBox="0 0 260 250" width="260" height="250" aria-label="RPM"></svg>
+          <svg id="gauge-RPM" viewBox="0 0 260 250" width="260" height="250" aria-label="Toerental"></svg>
         </div>
 
-        <!-- Centre panel: session odometer -->
         <div class="odo-panel">
-          <p class="odo-eyebrow">TRIP DISTANCE</p>
+          <p class="eyebrow">Ritafstand</p>
 
           <div class="odometer">
             <div class="odo-tape">
@@ -109,59 +129,76 @@
             <span class="odo-unit">km</span>
           </div>
 
-          <p class="odo-note">since last reset</p>
-          <button id="reset-session-btn" class="btn btn-ghost btn-sm">&#8635; Reset</button>
+          <!-- Live consumption: the headline number for anyone actually driving -->
+          <div class="consumption" id="consumption" hidden>
+            <span class="consumption-value" id="consumption-value">&#8212;</span>
+            <span class="consumption-unit">L/100km</span>
+          </div>
+
+          <button id="reset-session-btn" class="btn btn-ghost btn-sm">Reset rit</button>
         </div>
 
-        <!-- Speed gauge -->
         <div class="gauge-card">
-          <svg id="gauge-SPEED" viewBox="0 0 260 250" width="260" height="250" aria-label="Speed"></svg>
+          <svg id="gauge-SPEED" viewBox="0 0 260 250" width="260" height="250" aria-label="Snelheid"></svg>
         </div>
-
       </section>
 
-      <!-- ── Metric cards ──────────────────────────────────── -->
+      <!-- ── Live chart ─────────────────────────────────────── -->
+      <section class="panel chart-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2 class="panel-title">Verloop</h2>
+            <span class="chart-legend">
+              <span class="legend-item"><i class="legend-swatch" style="--c:#ff4444"></i>Toerental</span>
+              <span class="legend-item"><i class="legend-swatch" style="--c:#0099ff"></i>Snelheid</span>
+            </span>
+          </div>
+          <span class="chart-window" id="chart-window">laatste 90 s</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart" width="1200" height="260" aria-label="Verloop van toerental en snelheid"></canvas>
+          <span class="chart-empty" id="chart-empty">Nog geen data &#8212; verbind met de auto</span>
+        </div>
+      </section>
+
+      <!-- ── Metric cards ───────────────────────────────────── -->
       <section class="metrics-row">
-
-        <div class="metric-card" style="--mc:#ff6b35">
+        <% metrics.forEach((m) => { %>
+        <div class="metric-card" style="--mc:<%= m.color %>">
           <div class="mc-row">
-            <span class="mc-label">COOLANT</span>
-            <span class="mc-val"><b id="val-COOLANT_TEMP">&#8212;</b> <small>&#176;C</small></span>
+            <span class="mc-label"><%- m.label %></span>
+            <span class="mc-val"><b id="val-<%= m.key %>">&#8212;</b> <small><%- m.unit %></small></span>
           </div>
-          <div class="mc-track"><div id="bar-COOLANT_TEMP" class="mc-fill"></div></div>
+          <div class="mc-track"><div id="bar-<%= m.key %>" class="mc-fill"></div></div>
         </div>
-
-        <div class="metric-card" style="--mc:#7bed9f">
-          <div class="mc-row">
-            <span class="mc-label">ENGINE LOAD</span>
-            <span class="mc-val"><b id="val-ENGINE_LOAD">&#8212;</b> <small>%</small></span>
-          </div>
-          <div class="mc-track"><div id="bar-ENGINE_LOAD" class="mc-fill"></div></div>
-        </div>
-
-        <div class="metric-card" style="--mc:#ffd32a">
-          <div class="mc-row">
-            <span class="mc-label">THROTTLE</span>
-            <span class="mc-val"><b id="val-THROTTLE">&#8212;</b> <small>%</small></span>
-          </div>
-          <div class="mc-track"><div id="bar-THROTTLE" class="mc-fill"></div></div>
-        </div>
-
-        <div class="metric-card" style="--mc:#00d2d3">
-          <div class="mc-row">
-            <span class="mc-label">FUEL LEVEL</span>
-            <span class="mc-val"><b id="val-FUEL_LEVEL">&#8212;</b> <small>%</small></span>
-          </div>
-          <div class="mc-track"><div id="bar-FUEL_LEVEL" class="mc-fill"></div></div>
-        </div>
-
+        <% }); %>
       </section>
 
-      <p id="error-msg" class="error-msg" hidden></p>
+      <!-- ── Session statistics ─────────────────────────────── -->
+      <section class="panel stats-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2 class="panel-title">Sessie</h2>
+          </div>
+          <button id="export-btn" class="btn btn-ghost btn-sm" disabled>Exporteer CSV</button>
+        </div>
+        <div class="stats-grid">
+          <% stats.forEach((s) => { %>
+          <div class="stat">
+            <span class="stat-label"><%- s.label %></span>
+            <span class="stat-value" id="stat-<%= s.key %>">&#8212;<% if (s.unit) { %> <small><%- s.unit %></small><% } %></span>
+          </div>
+          <% }); %>
+        </div>
+      </section>
 
     </main>
   </div>
 
+  <!-- Toast notifications -->
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="/js/chart.js"></script>
   <script src="/js/dashboard.js"></script>
 </body>
 </html>

@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { obd } from '../obd/state';
+import { describeDTCs } from '../obd/dtcDescriptions';
 
 const router = Router();
 
-/** GET /api/dtcs — read stored fault codes (Mode 03) */
+/** GET /api/dtcs — read stored fault codes (Mode 03) with descriptions */
 router.get('/api/dtcs', async (_req, res) => {
   if (!obd.isConnected()) {
     res.status(409).json({ error: 'Not connected to OBD adapter' });
@@ -11,7 +12,9 @@ router.get('/api/dtcs', async (_req, res) => {
   }
   try {
     const codes = await obd.readDTCs();
-    res.json({ codes });
+    // `codes` stays for backwards compatibility; `details` carries the
+    // resolved description, severity and subsystem per code.
+    res.json({ codes, details: describeDTCs(codes) });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
